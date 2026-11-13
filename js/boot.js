@@ -28,7 +28,7 @@
    answer/6004245). Si rechaza o cierra el aviso, no se carga nada y la decisión
    se recuerda: el aviso no vuelve a aparecer. */
 var GTM_ID = '';
-var GA_ID = 'G-MZLEM3X1YK';
+var GA_ID = 'G-9GJH42X2J8';
 
 var CONSENT_KEY = 'ja-consent';
 
