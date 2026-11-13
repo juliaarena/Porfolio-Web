@@ -1,0 +1,113 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2021,
+    "sourceType": "script"
+  },
+  "globals": {
+    "gsap": "readonly",
+    "ScrollTrigger": "readonly",
+    "Lenis": "readonly",
+    "lenis": "readonly",
+    "SITE": "readonly",
+    "PROFILE": "readonly",
+    "PROJECTS": "readonly",
+    "FEATURED": "readonly",
+    "SERVICES": "readonly",
+    "PRINCIPLES": "readonly",
+    "matchMedia": "readonly",
+    "innerWidth": "readonly",
+    "innerHeight": "readonly",
+    "performance": "readonly",
+    "requestAnimationFrame": "readonly",
+    "addEventListener": "readonly",
+    "document": "readonly",
+    "window": "readonly",
+    "location": "readonly",
+    "navigator": "readonly",
+    "console": "readonly",
+    "setTimeout": "readonly",
+    "setInterval": "readonly",
+    "clearTimeout": "readonly",
+    "clearInterval": "readonly",
+    "localStorage": "readonly",
+    "sessionStorage": "readonly"
+  },
+  "rules": {
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^(startGUI|checkerboardProgram|[A-Z])"
+      }
+    ],
+    "no-undef": "off",
+    "no-console": "off",
+    "semi": [
+      "error",
+      "always"
+    ],
+    "quotes": [
+      "error",
+      "single",
+      {
+        "avoidEscape": true
+      }
+    ],
+    "indent": [
+      "error",
+      2
+    ],
+    "no-trailing-spaces": "error",
+    "comma-dangle": [
+      "error",
+      "always-multiline"
+    ],
+    "object-curly-spacing": [
+      "error",
+      "always"
+    ],
+    "array-bracket-spacing": [
+      "error",
+      "never"
+    ],
+    "space-before-blocks": "error",
+    "keyword-spacing": [
+      "error",
+      {
+        "before": true,
+        "after": true
+      }
+    ],
+    "no-multiple-empty-lines": [
+      "error",
+      {
+        "max": 2,
+        "maxEOF": 1
+      }
+    ],
+    "no-unused-expressions": "off",
+    "eqeqeq": [
+      "error",
+      "always",
+      {
+        "null": "ignore"
+      }
+    ]
+  },
+  "ignorePatterns": [
+    "node_modules/",
+    "package-lock.json",
+    "js/vendor/",
+    "*.min.js",
+    "*.svg",
+    "*.png",
+    "*.jpg",
+    "*.webp",
+    "*.woff2",
+    "*.ico"
+  ]
+}

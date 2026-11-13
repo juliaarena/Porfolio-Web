@@ -1,0 +1,28 @@
+# Dependencias (se reinstalan con: npm i)
+node_modules/
+
+# Basura de macOS
+.DS_Store
+._*
+
+# Archivos temporales que dejan los editores de texto (0 bytes, no son del sitio)
+.!*!*
+*~
+.!47614!index.html
+.!22501!index.html
+
+# ===== Originales enormes que la web NO usa =====
+# La web usa las copias livianas que están al lado (*-web.mp4, poster-*.webp,
+# *.webp). Estos originales pesan 17-76 MB cada uno, no se referencian en
+# js/content.js y hacen que subir el sitio a GitHub sea lentísimo.
+# NO se borran: siguen en el disco, en el ZIP de respaldo del Escritorio y en
+# ~/Desktop/Julia-Portfolio-originales/. Si los querés versionar algún día,
+# borrá las líneas de abajo y subilos por separado.
+images/shiro-ai/Shiro_AI.mp4
+images/zeigo-eac/Schneider-Electric-Zeigo-EAC-video2.mp4
+images/zeigo-network/Schneider-electric-zeigo-network-video 2.mp4
+images/luna-care/FINAL Luna Video.mp4
+images/shiro-ai/mockup-shiro-ai.png
+images/zeigo-network/mockup-zeigo-network.png
+images/zeigo-eac-landing/mockup-zeigo-eac-landing.png
+images/zeigo-eac-landing/screen-zeigo-eac-landing-2.jpg

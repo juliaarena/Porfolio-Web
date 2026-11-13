@@ -1,0 +1,24 @@
+{
+  "name": "porfolio-web",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "http-server -p 5173 -c-1 --proxy http://127.0.0.1:5173? -o",
+    "routes": "node scripts/build-routes.mjs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "eslint": "^8.57.1",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^7.3.0",
+    "eslint-plugin-standard": "^4.1.0",
+    "http-server": "^14.1.1"
+  }
+}

@@ -1,0 +1,3509 @@
+@font-face {
+  font-family: "Switzer";
+  src: url("/fonts/Switzer-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --black: #0c0c0c;
+  --black-2: #151515;
+  --grey: #d8d8d4;
+  --grey-2: #c8c8c3;
+  --mut: #7b7b76;
+  --mut-l: #6e6e68;
+  --orange: #7D33FF;
+  /* premios (chips de Luna Care y de la portada): dorado y plateado */
+  --gold: #e9b949;
+  --silver: #d2d7de;
+  --line: rgba(216, 216, 212, 0.15);
+  --line-d: rgba(12, 12, 12, 0.22);
+  --font:
+    "Switzer", "Aeonik", "Inter", "Helvetica Neue", Arial, sans-serif;
+  --pad: clamp(20px, 4vw, 72px);
+  --ease: cubic-bezier(0.83, 0, 0.17, 1);
+  /* gentler settle, for things that travel a long way (card morphs) */
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html,
+body {
+  background: var(--black);
+  color: var(--grey);
+}
+/* `clip` (not `hidden`) on the root: it kills any sideways scroll without
+   creating a scroll container, so smooth scrolling and sticky keep working.
+   iOS Safari ignores overflow-x on body alone, which is why it lives here. */
+html {
+  overflow-x: clip;
+}
+body {
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+::selection {
+  background: var(--orange);
+  color: var(--black);
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: inherit;
+}
+:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 4px;
+}
+@media (hover: hover) and (pointer: fine) {
+  body,
+  a,
+  button,
+  [role="button"] {
+    cursor: none;
+  }
+}
+
+.lbl {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.dark {
+  color: var(--black);
+  font-weight: 700;
+}
+.logo-text {
+  font-family: var(--font);
+  font-weight: 600;
+  font-size: clamp(20px, 4vw, 32px);
+  letter-spacing: -0.02em;
+  color: var(--grey);
+  white-space: nowrap;
+  display: inline-block;
+}
+.lbl::before {
+  content: "■";
+  color: var(--orange);
+  margin-right: 10px;
+  font-size: 9px;
+  vertical-align: 1px;
+}
+.lbl.-plain::before {
+  content: none;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+.o {
+  color: var(--orange);
+}
+.section {
+  padding-left: var(--pad);
+  padding-right: var(--pad);
+}
+
+/* ---------- noise ---------- */
+.noise {
+  position: fixed;
+  inset: -60%;
+  z-index: 70;
+  pointer-events: none;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  animation: noise 6s steps(8) infinite;
+}
+@keyframes testimonials-marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes noise {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-4%, 3%);
+  }
+  50% {
+    transform: translate(3%, -4%);
+  }
+  75% {
+    transform: translate(-3%, -3%);
+  }
+}
+
+/* ---------- fluid smoke (tequila-style, WebGL) ---------- */
+#fluid {
+  position: fixed;
+  inset: 0;
+  z-index: 0; /* behind the content: main sits above it */
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+  mix-blend-mode: screen;
+  opacity: 0.35;
+}
+main {
+  position: relative;
+  z-index: 1;
+}
+/* pixel trail: the site's grid lighting up under the pointer */
+#pxtrail {
+  position: fixed;
+  inset: 0;
+  z-index: 55; /* over the content, under the menu, wipe, loader and cursor */
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  #pxtrail {
+    display: none;
+  }
+}
+@media (hover: none), (pointer: coarse) {
+  #fluid {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #fluid {
+    display: none;
+  }
+}
+
+/* ---------- cursor: dot + ring hover ---------- */
+.cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 300;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid transparent;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    width 0.35s var(--ease),
+    height 0.35s var(--ease),
+    background 0.3s,
+    border-color 0.3s;
+}
+.cursor span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+/* links & buttons: bigger, hollow, stroked — no fill, no orange */
+.cursor.-ring {
+  width: 52px;
+  height: 52px;
+  background: transparent;
+  border-color: #fff;
+}
+/* big case targets: large ring with a label inside */
+.cursor.-case {
+  width: 118px;
+  height: 118px;
+  background: transparent;
+  border-color: #fff;
+}
+.cursor.-case span {
+  opacity: 1;
+  transition-delay: 0.12s;
+}
+@media (hover: none), (pointer: coarse) {
+  .cursor {
+    display: none;
+  }
+}
+
+/* ---------- loader ---------- */
+html.no-loader .loader {
+  display: none;
+}
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--black);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.loader__logo {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+}
+.loader__fill {
+  position: absolute;
+  inset: 0;
+  background: var(--orange);
+  clip-path: inset(100% 0 0 0);
+  z-index: 1;
+}
+/* el nombre, grande y centrado, en la pantalla de carga. Va POR ENCIMA del
+   relleno violeta (z-index 2), así queda legible mientras el violeta sube. */
+.loader__name {
+  position: relative;
+  z-index: 2;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-size: clamp(34px, 11vw, 150px);
+  color: var(--grey);
+  text-align: center;
+  padding: 0 var(--pad);
+}
+.loader__pct {
+  position: absolute;
+  right: var(--pad);
+  bottom: calc(var(--pad) * 0.5);
+  z-index: 2;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-size: clamp(70px, 13vw, 170px);
+  line-height: 1;
+  color: var(--grey);
+}
+.loader__pct sup {
+  font-size: 0.26em;
+  color: var(--grey);
+  opacity: 0.55;
+}
+.loader__grid {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  pointer-events: none;
+}
+.loader__grid i {
+  background: var(--orange);
+  opacity: 0;
+}
+
+/* ---------- pixel page wipe ---------- */
+.wipe {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  pointer-events: none;
+  display: grid;
+}
+.wipe i {
+  background: var(--orange);
+  opacity: 0;
+}
+.wipe__label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* a long project name wraps to two lines: the flex box then fills the
+     screen, so the lines need their own centring or they sit hard left */
+  text-align: center;
+  text-wrap: balance;
+  padding: 0 var(--pad);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  font-size: clamp(30px, 6vw, 84px);
+  color: var(--black);
+  opacity: 0;
+}
+
+/* ---------- header ---------- */
+.head {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px var(--pad);
+}
+.head__logo {
+  position: relative;
+  display: block;
+}
+.burger {
+  width: 52px;
+  height: 40px;
+  position: relative;
+}
+.burger i {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  height: 2px;
+  background: var(--grey);
+  transition:
+    transform 0.45s var(--ease),
+    background 0.3s;
+}
+.burger i:nth-child(1) {
+  top: 14px;
+}
+.burger i:nth-child(2) {
+  top: 24px;
+}
+.burger:hover i {
+  background: var(--orange);
+}
+body.-menu .burger i:nth-child(1) {
+  transform: translateY(5px) rotate(45deg);
+}
+body.-menu .burger i:nth-child(2) {
+  transform: translateY(-5px) rotate(-45deg);
+}
+
+/* ---------- fullscreen menu ---------- */
+.menu {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  visibility: hidden;
+  pointer-events: none;
+}
+body.-menu .menu {
+  visibility: visible;
+  pointer-events: auto;
+}
+.menu__px {
+  position: absolute;
+  inset: 0;
+  display: grid;
+}
+.menu__px i {
+  background: var(--orange);
+  opacity: 0;
+}
+body.-menu .burger i {
+  background: var(--black);
+}
+body.-menu .burger:hover i {
+  background: #fff;
+}
+.menu__inner {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 110px var(--pad) 26px;
+  opacity: 0;
+  color: var(--black);
+}
+.menu__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr);
+  gap: clamp(24px, 4vw, 80px);
+  flex: 1;
+  align-content: center;
+}
+.menu__nav a {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(12px, 2vw, 26px);
+  padding: clamp(8px, 1.4vh, 16px) 0;
+}
+.menu__nav a small {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--black);
+  opacity: 0.6;
+}
+.menu__nav a b {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  color: var(--black);
+  font-size: clamp(36px, min(7vw, 10.4vh), 100px);
+  transition:
+    transform 0.5s var(--ease),
+    color 0.3s;
+  display: inline-block;
+  padding-bottom: 0.04em;
+}
+.menu__nav a:hover b {
+  transform: translateX(clamp(10px, 1.8vw, 26px));
+  color: #fff;
+}
+.menu__nav a:hover small {
+  opacity: 1;
+  color: #fff;
+}
+.menu__aside {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, 3.5vh, 36px);
+  justify-content: center;
+}
+.menu__aside .grp small {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--black);
+  margin-bottom: 10px;
+}
+.menu__aside .grp a {
+  display: block;
+  font-size: clamp(15px, 1.4vw, 19px);
+  font-weight: 600;
+  color: var(--black);
+  padding: 3px 0;
+  transition: color 0.3s;
+}
+.menu__aside .grp a:hover {
+  color: #fff;
+}
+.menu__foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--black);
+}
+@media (max-width: 760px) {
+  .menu__grid {
+    grid-template-columns: 1fr;
+    align-content: start;
+    gap: 34px;
+    overflow: auto;
+  }
+}
+.page {
+  display: none;
+}
+.page.-active {
+  display: block;
+}
+/* build.mjs puts each page's heading and summary here for crawlers
+   that don't run JS; the engine removes it on start */
+.prerender {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- hero ---------- */
+.hero {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: 4vh;
+  position: relative;
+  overflow: hidden;
+}
+.hero__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  color: var(--mut);
+  padding-top: 110px;
+  margin-bottom: auto;
+}
+.hero__meta {
+  flex-wrap: wrap;
+  row-gap: 10px;
+}
+.hero__h1 {
+  margin-top: 5vh;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+  font-size: clamp(28px, 8vw, 140px);
+}
+.hero__h1 {
+  overflow-wrap: normal;
+}
+.hero__h1 .line > span {
+  max-width: 100%;
+}
+.hero__h1 .line {
+  display: block;
+  overflow: hidden;
+}
+.hero__h1 .line > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.18em;
+  will-change: transform;
+}
+.hero__h1 .ln2 {
+  padding-left: clamp(16px, 4vw, 90px);
+}
+/* En pantallas chicas el titular del hero se pasaba: el mínimo del clamp (28px)
+   se activa por debajo de ~350px y la última línea ("THAT INSPIRE PEOPLE" + el
+   chip) se salía del viewport, así que el chip quedaba recortado por el
+   overflow:hidden de .line. Con este mínimo más bajo todo entra con aire.
+   De 640px para arriba nada cambia. */
+@media (max-width: 640px) {
+  .hero__h1 {
+    font-size: clamp(24px, 7.4vw, 140px);
+  }
+}
+.chip {
+  display: inline-block;
+  height: 0.68em;
+  width: 1.6em;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  overflow: hidden;
+  vertical-align: middle;
+  position: relative;
+  transform-origin: left center;
+}
+.chip img {
+  position: absolute;
+  inset: 0;
+  /* el retrato adentro del cilindro: el pill recorta en vertical, así que se
+     sube la posición para que la CARA quede centrada (el centro de la cara está
+     al ~31% de la altura de la foto y la ventana visible ocupa el centro) */
+  object-position: 50% 22%;
+}
+.chip-solid {
+  width: 0.68em;
+  height: 0.68em;
+  border-radius: 50%;
+  background: var(--orange);
+  overflow: hidden;
+}
+.hero__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  margin-top: 4vh;
+}
+.hero__blurb {
+  max-width: 38ch;
+  color: var(--mut);
+  font-size: clamp(14px, 1.1vw, 17px);
+}
+.hero__blurb b {
+  color: var(--grey);
+  font-weight: 600;
+}
+.hero__scroll {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--mut);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.hero__scroll .sq {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--orange);
+  animation: blink 1.6s steps(2) infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0.15;
+  }
+}
+@media (max-width: 760px) {
+  .hero__row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ---------- manifesto ---------- */
+.mani {
+  padding-top: clamp(70px, 12vh, 150px);
+  padding-bottom: clamp(70px, 12vh, 150px);
+  border-top: 1px solid var(--line);
+}
+.mani p {
+  margin-top: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  font-size: clamp(30px, 4.6vw, 74px);
+  max-width: 24ch;
+  text-transform: uppercase;
+}
+.mani p .w {
+  opacity: 0.14;
+  display: inline-block;
+}
+
+/* ---------- WORK: counter-scrolling split columns ---------- */
+.work {
+  position: relative;
+}
+.work__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  color: var(--mut);
+  padding: clamp(70px, 11vh, 140px) var(--pad) clamp(24px, 4vh, 44px);
+}
+.wshow {
+  position: relative;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--black);
+}
+.wcol {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: calc(50% + 1px);
+  overflow: hidden;
+}
+.wcol.-l {
+  left: 0;
+}
+.wcol.-r {
+  left: calc(50% - 1px);
+}
+.wtrack {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  will-change: transform;
+}
+.wcell {
+  position: relative;
+  overflow: hidden;
+}
+.wfull {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  /* exactly one showcase wide, so both halves always meet at the seam.
+     100vw includes the scrollbar while the columns are sized in %, and that
+     mismatch tore a few pixels out of the middle of the composition. */
+  width: var(--wfull-w, 100vw);
+  display: block;
+}
+.wcol.-r .wfull {
+  transform: translateX(calc(-50% + 1px));
+}
+.wfull img {
+  position: absolute;
+  inset: 0;
+  /* The cover has to FILL the cell. Without a size the browser drew it at its
+     NATURAL size anchored to the top-left corner, so a 4812px-wide cover only
+     ever showed a fragment of its top-left region instead of the artwork. */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.wfull::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(12, 12, 12, 0.42);
+}
+.wfull__ui {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(14px, 2.4vh, 24px);
+  text-align: center;
+  padding: 0 var(--pad);
+}
+.wfull__tags {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--grey);
+}
+.wfull__tags i {
+  font-style: normal;
+  color: var(--orange);
+  padding: 0 8px;
+}
+/* one size for every featured slide, set by the longest of the three
+   ("Luna Care" / "Zeigo EAC") so they read as one set */
+.wfull__name {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  font-size: clamp(36px, 5.8vw, 98px);
+  transition: color 0.3s;
+}
+.wfull.-hov .wfull__name {
+  color: var(--white);
+}
+.wshow__count {
+  position: absolute;
+  left: var(--pad);
+  bottom: clamp(24px, 5vh, 48px);
+  z-index: 50;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--grey);
+  pointer-events: none;
+  background: var(--black);
+  padding: 8px 12px;
+}
+.wshow__count b {
+  color: var(--orange);
+}
+.wshow__hint {
+  position: absolute;
+  right: var(--pad);
+  top: 96px;
+  z-index: 50;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(216, 216, 212, 0.6);
+  pointer-events: none;
+}
+/* mobile fallback cards */
+.mslide {
+  position: relative;
+  height: 70svh;
+  margin: 0 var(--pad) 14px;
+  overflow: hidden;
+  display: none;
+}
+.mslide img {
+  position: absolute;
+  inset: 0;
+  /* same as the desktop showcase: the cover fills the whole card, scaled to it */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mslide::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(12, 12, 12, 0.3),
+    rgba(12, 12, 12, 0.65)
+  );
+}
+.mslide__ui {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+}
+.mslide__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.mslide__tags {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--grey);
+}
+.mslide__foot {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+/* same rule as the desktop showcase: one size for all three featured */
+.mslide__name {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  font-size: clamp(24px, 6.4vw, 44px);
+}
+.mslide__cta {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--grey);
+}
+.mslide__cta b {
+  color: var(--orange);
+}
+.mslide .lbl {
+  color: var(--grey);
+}
+/* los chips de premios en la portada mobile: apilados y alineados a la izquierda,
+   como el resto de la composición del slide */
+.mslide .awds.-mini {
+  align-items: flex-start;
+}
+.work__all {
+  display: flex;
+  justify-content: center;
+  padding: clamp(40px, 7vh, 80px) var(--pad) clamp(20px, 4vh, 44px);
+}
+.btnAll {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 16px 28px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition:
+    border-color 0.3s,
+    color 0.3s,
+    background 0.3s;
+}
+.btnAll b {
+  color: var(--orange);
+  font-weight: 700;
+  transition: color 0.3s;
+}
+.btnAll:hover {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: var(--black);
+}
+.btnAll:hover b {
+  color: var(--black);
+}
+@media (max-width: 820px) {
+  .wshow,
+  .wshow__count,
+  .wshow__hint {
+    display: none;
+  }
+  .mslide {
+    display: block;
+  }
+}
+@media (min-width: 821px) {
+  .mslide {
+    display: none;
+  }
+}
+
+/* ---------- WORK INDEX PAGE ---------- */
+.windex {
+  min-height: 100svh;
+  padding-top: 140px;
+}
+.windex__head {
+  padding: 0 var(--pad) clamp(30px, 6vh, 60px);
+}
+.windex__head h1 {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+  font-size: clamp(52px, 10vw, 160px);
+  margin-top: 18px;
+}
+/* la fila del titular: el titular grande a la izquierda y el chip de "Big impact"
+   pegado al margen derecho, alineado con su última línea ("I've made."). El
+   `perspective` es para el chip: sin él, el rotateX/rotateY del mouse se lee como
+   un aplastado en vez de una inclinación 3D. */
+.windex__row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: clamp(16px, 3vw, 48px);
+  perspective: 600px;
+}
+.windex__row h1 {
+  min-width: 0;
+}
+/* ---- chip "Big impact" (página de work) ----
+   La píldora clara del diseño: degradé lavanda, borde y texto violeta. El texto va
+   partido en dos líneas (con un <br> en el markup) para que quede un chip compacto
+   en vez de uno larguísimo. Entra con un fade, para acompañar al titular. */
+.impact-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 22px;
+  /* lo separa un poco del borde inferior del titular: así queda centrado con la
+     línea "I've made." en vez de colgado de su borde */
+  margin-bottom: clamp(6px, 1.2vh, 16px);
+  border: 1px solid #cbb5ff;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f0e9ff, #e4d7ff);
+  color: #392477;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.32;
+  letter-spacing: -0.2px;
+  text-align: left;
+  box-shadow:
+    0 4px 12px rgba(130, 91, 220, 0.1),
+    0 0 22px rgba(160, 120, 255, 0.12);
+  cursor: pointer;
+  transform: translateY(0) scale(1);
+  /* sólo opacity: así el fade no pelea con el transform que escribe el mouse */
+  animation: chipIn 0.9s var(--ease-soft) 0.35s both;
+  transition:
+    transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 300ms ease,
+    background 300ms ease;
+}
+.chip-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  color: #7651db;
+  transition: transform 400ms ease;
+}
+.impact-chip:hover {
+  transform: translateY(-4px) scale(1.035);
+  box-shadow:
+    0 8px 20px rgba(130, 91, 220, 0.18),
+    0 0 30px rgba(160, 120, 255, 0.25);
+}
+.impact-chip:hover .chip-icon {
+  transform: rotate(45deg) scale(1.15);
+}
+.impact-chip:active {
+  transform: translateY(-1px) scale(0.98);
+}
+@keyframes chipIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (max-width: 820px) {
+  /* en pantalla chica el chip baja debajo del titular, alineado a la izquierda */
+  .windex__row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+  }
+  .impact-chip {
+    padding: 10px 18px;
+    font-size: 13px;
+    margin-bottom: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .impact-chip {
+    animation: none;
+    transition: none;
+  }
+  .impact-chip .chip-icon {
+    transition: none;
+  }
+}
+.wirow {
+  display: grid;
+  /* the year column gets a fixed floor: "∞" is a single glyph and "2025" is
+     four, and without it that row's shorter year shoved its category label
+     18px out of line with every other row. */
+  grid-template-columns: auto minmax(0, 1fr) auto minmax(28px, auto);
+  align-items: center;
+  gap: clamp(12px, 2vw, 32px);
+  margin: 0 var(--pad);
+  padding: clamp(22px, 3.4vh, 38px) 0;
+  border-top: 1px solid var(--line);
+}
+.wirow:last-of-type {
+  border-bottom: 1px solid var(--line);
+}
+.wirow__idx {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--mut);
+  transition: color 0.3s;
+}
+/* one type size for every row. The ceiling is set by the longest title
+   ("Beyond Web Design...") so all seven hold a single line
+   on desktop and wrap gracefully on smaller screens. */
+.wirow__name {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 0.96;
+  font-size: clamp(20px, 3.4vw, 54px);
+  transition:
+    transform 0.5s var(--ease),
+    color 0.3s;
+}
+.wirow__cat {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+.wirow__year {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mut);
+  text-align: right;
+}
+.wirow:hover .wirow__name {
+  transform: translateX(clamp(8px, 1.6vw, 22px));
+  color: var(--orange);
+}
+.wirow:hover .wirow__idx {
+  color: var(--orange);
+}
+.windex__cta {
+  padding: clamp(60px, 10vh, 110px) var(--pad);
+  text-align: center;
+}
+@media (max-width: 820px) {
+  .wirow {
+    grid-template-columns: auto minmax(0, 1fr) minmax(28px, auto);
+    row-gap: 10px;
+  }
+  .wirow__cat {
+    display: none;
+  }
+}
+
+/* ---------- pixel mosaic strips (self-driven) ---------- */
+.pxt {
+  display: grid;
+  height: clamp(150px, 26vh, 280px);
+  width: 100%;
+}
+.pxt i {
+  opacity: 0;
+}
+.pxt.-toGrey {
+  background: var(--black);
+}
+.pxt.-toGrey i {
+  background: var(--grey);
+}
+.pxt.-toBlack {
+  background: var(--grey);
+}
+.pxt.-toBlack i {
+  background: var(--black);
+}
+
+/* ---------- services ---------- */
+.services {
+  background: var(--grey);
+  color: var(--black);
+  padding-top: clamp(70px, 11vh, 140px);
+  padding-bottom: clamp(70px, 11vh, 140px);
+}
+.services .lbl {
+  color: var(--mut-l);
+}
+.services__intro {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 0.98;
+  font-size: clamp(34px, 5vw, 80px);
+  margin: 22px 0 clamp(36px, 6vh, 64px);
+  max-width: 16ch;
+}
+.srv {
+  border-top: 2px solid var(--black);
+}
+.srv:last-of-type {
+  border-bottom: 2px solid var(--black);
+}
+.srv__head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: clamp(14px, 3vw, 40px);
+  width: 100%;
+  padding: clamp(18px, 2.8vh, 30px) 0;
+  cursor: pointer;
+}
+@media (hover: hover) and (pointer: fine) {
+  .srv__head {
+    cursor: none;
+  }
+}
+.srv__idx {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--orange);
+}
+.srv__name {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  font-size: clamp(26px, 4.6vw, 64px);
+  text-align: left;
+  transition: transform 0.45s var(--ease);
+}
+.srv:hover .srv__name {
+  transform: translateX(clamp(8px, 1.6vw, 22px));
+}
+.srv__count {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mut-l);
+}
+.srv__plus {
+  width: 34px;
+  height: 34px;
+  position: relative;
+  flex: none;
+}
+.srv__plus::before,
+.srv__plus::after {
+  content: "";
+  position: absolute;
+  background: var(--black);
+  left: 50%;
+  top: 50%;
+  transition: transform 0.45s var(--ease);
+}
+.srv__plus::before {
+  width: 18px;
+  height: 2px;
+  transform: translate(-50%, -50%);
+}
+.srv__plus::after {
+  width: 2px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+}
+.srv.-open .srv__plus::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+.srv__body {
+  height: 0;
+  overflow: hidden;
+}
+.srv__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: clamp(20px, 4vw, 70px);
+  padding: 6px 0 clamp(24px, 4vh, 40px);
+}
+.srv__inner p {
+  color: #3a3a36;
+  max-width: 52ch;
+  font-size: clamp(14px, 1.15vw, 17px);
+}
+.srv__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-content: start;
+}
+.srv__chips span {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid var(--line-d);
+  border-radius: 999px;
+  padding: 7px 13px;
+  color: var(--mut-l);
+}
+@media (max-width: 760px) {
+  .srv__inner {
+    grid-template-columns: 1fr;
+  }
+  .srv__count {
+    display: none;
+  }
+}
+
+/* ---------- about ---------- */
+.about {
+  background: var(--grey);
+  color: var(--black);
+  padding-bottom: clamp(80px, 13vh, 160px);
+}
+.about .lbl {
+  color: var(--mut-l);
+}
+.about__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(30px, 5vw, 100px);
+  margin-top: 26px;
+}
+.about__left {
+  position: sticky;
+  top: 14vh;
+  align-self: start;
+}
+.about__left h2 {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 0.96;
+  font-size: clamp(40px, 5.8vw, 92px);
+}
+.about__left h2 .line {
+  display: block;
+  overflow: hidden;
+}
+.about__left h2 .line > span {
+  display: inline-block;
+}
+.about__portraitWrap {
+  position: relative;
+  margin-top: clamp(22px, 4vh, 40px);
+  max-width: 460px;
+}
+.about__portrait {
+  aspect-ratio: 4/5;
+  overflow: hidden;
+  position: relative;
+  background: var(--grey-2);
+}
+.about__portrait img {
+  transform: scale(1.12);
+  /* la foto se muestra EN COLOR y al pasar el mouse se pone en blanco y negro
+     (antes era al revés). El paso a paso del `steps(4)` le da el aire de copia */
+  filter: none;
+  transition: filter 0.5s steps(4);
+  will-change: transform;
+}
+.about__portraitWrap:hover img {
+  filter: grayscale(1) contrast(1.06);
+}
+.about__portrait figcaption {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--grey);
+  mix-blend-mode: difference;
+  z-index: 2;
+}
+.badge {
+  position: absolute;
+  right: -34px;
+  top: -34px;
+  width: 112px;
+  height: 112px;
+  z-index: 3;
+  pointer-events: none;
+}
+.badge svg {
+  width: 100%;
+  height: 100%;
+  animation: spin 14s linear infinite;
+}
+.badge text {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  fill: var(--black);
+}
+.badge circle.bg {
+  fill: var(--orange);
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.about__right p {
+  color: #3a3a36;
+  font-size: clamp(16px, 1.5vw, 22px);
+  line-height: 1.5;
+  margin-bottom: 1.1em;
+  max-width: 46ch;
+}
+.about__right p b {
+  color: var(--black);
+  font-weight: 600;
+}
+.about__right p .w {
+  display: inline-block;
+  opacity: 0.18;
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  margin-top: clamp(36px, 6vh, 64px);
+}
+.stats div {
+  border-top: 2px solid var(--black);
+  padding-top: 14px;
+}
+.stats b {
+  display: block;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-size: clamp(36px, 4.6vw, 70px);
+  line-height: 1;
+}
+.stats small {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mut-l);
+}
+@media (max-width: 820px) {
+  .about__grid {
+    grid-template-columns: 1fr;
+  }
+  .about__left {
+    position: static;
+  }
+  .stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  .badge {
+    right: -10px;
+  }
+  /* the rotating badge pokes past the screen edge on phones */
+  .about {
+    overflow-x: clip;
+  }
+}
+
+/* ---------- footer ---------- */
+.foot {
+  position: relative;
+  overflow: hidden;
+  padding-top: clamp(70px, 12vh, 150px);
+  padding-bottom: 24px;
+  border-top: 1px solid var(--line);
+}
+.foot__cta {
+  display: block;
+  text-align: center;
+}
+.foot__cta .lbl {
+  color: var(--mut);
+}
+.roll {
+  display: block;
+  overflow: hidden;
+  margin-top: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  font-size: clamp(28px, 15.5vw, 250px);
+  height: 1em;
+}
+/* OJO: el mínimo de este clamp era 64px, y por debajo de ~415px de ancho el
+   texto no entraba (a 320px medía ~312px en una caja de 280px y se recortaba la
+   "K" de TALK). Con el mínimo en 28px, de 415px para arriba queda exactamente
+   igual que antes y en los teléfonos entra completo. */
+.roll__in {
+  display: block;
+  transition: transform 0.55s var(--ease);
+}
+.foot__cta:hover .roll__in {
+  transform: translateY(-1em);
+}
+.roll__a,
+.roll__b {
+  display: block;
+  height: 1em;
+  line-height: 1;
+}
+.roll__b {
+  color: var(--orange);
+}
+.foot__mail {
+  display: block;
+  text-align: center;
+  margin-top: 26px;
+  font-size: clamp(15px, 1.7vw, 20px);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: var(--mut);
+  transition: color 0.3s;
+  position: relative;
+  z-index: 2;
+}
+.foot__mail b {
+  color: var(--grey);
+  font-weight: 600;
+  position: relative;
+}
+.foot__mail b::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  height: 1px;
+  width: 100%;
+  background: var(--orange);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.5s var(--ease);
+}
+.foot__mail:hover b::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+.foot__mail:hover b {
+  color: var(--orange);
+}
+.foot__meta {
+  display: grid;
+  /* 3 columnas de texto + el botón "back to top" en la suya, así nunca se
+     desacomoda cuando se agrega un grupo nuevo (Legals) */
+  grid-template-columns: repeat(3, 1fr) auto;
+  gap: 24px;
+  align-items: start;
+  margin-top: clamp(60px, 10vh, 120px);
+  position: relative;
+  z-index: 2;
+}
+.foot__meta .grp small {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mut);
+  margin-bottom: 10px;
+}
+.foot__meta .grp a,
+.foot__meta .grp .cookies-open {
+  display: block;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 3px 0;
+  transition: color 0.3s;
+}
+.foot__meta .grp a:hover,
+.foot__meta .grp .cookies-open:hover {
+  color: var(--orange);
+}
+.toTop {
+  justify-self: end;
+  width: 58px;
+  height: 58px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition:
+    border-color 0.3s,
+    color 0.3s,
+    background 0.3s;
+}
+.toTop:hover {
+  border-color: var(--orange);
+  color: var(--black);
+  background: var(--orange);
+}
+.foot__logo {
+  position: absolute;
+  left: 50%;
+  bottom: -15vw;
+  transform: translateX(-50%);
+  width: min(58vw, 700px);
+  opacity: 0.07;
+  pointer-events: none;
+}
+.foot__logo svg {
+  width: 100%;
+  height: auto;
+  fill: var(--orange);
+}
+.foot__bar {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: clamp(46px, 8vh, 90px);
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mut);
+  position: relative;
+  z-index: 2;
+}
+@media (max-width: 720px) {
+  .foot__meta {
+    grid-template-columns: 1fr 1fr;
+  }
+  .toTop {
+    justify-self: start;
+  }
+}
+
+/* ---------- about page ---------- */
+.ahero {
+  min-height: 88svh;
+  padding: 150px var(--pad) clamp(40px, 7vh, 80px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: clamp(28px, 5vw, 90px);
+  align-items: center;
+}
+.ahero h1 {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+  font-size: clamp(52px, 9.5vw, 150px);
+  margin: 18px 0 26px;
+}
+.ahero h1 .line {
+  display: block;
+  overflow: hidden;
+}
+.ahero h1 .line > span {
+  display: inline-block;
+}
+.ahero__intro {
+  color: var(--mut);
+  font-size: clamp(16px, 1.5vw, 21px);
+  max-width: 44ch;
+}
+.ahero__intro b {
+  color: var(--grey);
+  font-weight: 600;
+}
+.ahero__right .about__portraitWrap {
+  max-width: 520px;
+  margin: 0;
+}
+.ahero__right .about__portrait figcaption {
+  color: var(--grey);
+}
+@media (max-width: 820px) {
+  .ahero {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+  /* the spinning badge's corners poke past the screen edge on phones */
+  .ahero {
+    overflow-x: clip;
+  }
+}
+.mq {
+  overflow: hidden;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: clamp(14px, 2.4vh, 24px) 0;
+}
+.mq + .mq {
+  border-top: 0;
+}
+.mq__in {
+  display: flex;
+  gap: clamp(28px, 4vw, 60px);
+  white-space: nowrap;
+  width: max-content;
+  animation: mq 22s linear infinite;
+  will-change: transform;
+}
+.mq.-rev .mq__in {
+  animation-direction: reverse;
+  animation-duration: 26s;
+}
+.mq b {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-size: clamp(26px, 3.6vw, 56px);
+}
+.mq b.-ghost {
+  -webkit-text-stroke: 0;
+  color: #242422;
+}
+@keyframes mq {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mq__in {
+    animation: none;
+  }
+}
+.abio {
+  padding-top: clamp(64px, 10vh, 120px);
+  padding-bottom: clamp(64px, 10vh, 120px);
+}
+.abio__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(24px, 5vw, 90px);
+  margin-top: 24px;
+}
+.abio__grid h2 {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 0.98;
+  font-size: clamp(32px, 4.6vw, 72px);
+  max-width: 14ch;
+}
+.abio__copy p {
+  color: var(--mut);
+  font-size: clamp(16px, 1.5vw, 21px);
+  line-height: 1.55;
+  margin-bottom: 1.1em;
+  max-width: 52ch;
+}
+.abio__copy p b {
+  color: var(--grey);
+  font-weight: 600;
+}
+.abio__copy p .w {
+  display: inline-block;
+  opacity: 0.16;
+}
+@media (max-width: 820px) {
+  .abio__grid {
+    grid-template-columns: 1fr;
+  }
+}
+.dossier {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(14px, 2vw, 24px);
+  margin-top: clamp(36px, 6vh, 60px);
+}
+.dossier div {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+.dossier small {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mut);
+  margin-bottom: 6px;
+}
+.dossier b {
+  font-weight: 600;
+  font-size: clamp(14px, 1.3vw, 18px);
+}
+.dossier b .o {
+  font-weight: 700;
+}
+@media (max-width: 640px) {
+  .dossier {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.acta {
+  padding: clamp(70px, 12vh, 150px) var(--pad);
+  text-align: center;
+}
+.acta .lbl {
+  color: var(--mut);
+}
+.acta__roll {
+  display: inline-block;
+  overflow: hidden;
+  margin-top: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  font-size: clamp(52px, 11vw, 170px);
+  height: 1em;
+}
+.acta__links {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  margin-top: clamp(28px, 5vh, 48px);
+  flex-wrap: wrap;
+}
+.about__more {
+  margin-top: clamp(26px, 4vh, 44px);
+}
+.btnAll.-ink {
+  border-color: rgba(12, 12, 12, 0.35);
+}
+.btnAll.-ink:hover {
+  background: var(--black);
+  border-color: var(--black);
+  color: var(--grey);
+}
+.btnAll.-ink:hover b {
+  color: var(--orange);
+}
+
+/* ---------- case pages ---------- */
+.case__hero {
+  position: relative;
+  /* Phones and tablets keep a full-screen statement. From 821px up the hero takes
+     the exact shape of the cover instead — see the media query below — so the
+     artwork fills the full width and height with NOTHING cropped. */
+  height: 88svh;
+  /* the width is ALWAYS the full screen: without this the aspect-ratio below
+     would derive the width from the height and the hero would end up narrower
+     than the window (or, on a phone, wider than it) */
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+@media (min-width: 821px) {
+  .case__hero {
+    /* JS writes the real ratio from the cover itself (see renderCase); this is
+       only the fallback for the instant before the image reports its size. */
+    height: auto;
+    aspect-ratio: 16 / 9;
+    /* safety net for a very tall cover or a very wide window: the width stays
+       full and only a sliver of the artwork is cropped */
+    max-height: 96svh;
+  }
+}
+.case__hero img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.6);
+}
+.case__hero .blinds {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+.case__hero .blinds i {
+  flex: 1;
+  background: var(--black);
+}
+.case__title {
+  position: relative;
+  z-index: 2;
+  padding: 0 var(--pad) 6vh;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 0.94;
+  font-size: clamp(52px, 10.5vw, 170px);
+}
+.case__title.-fit {
+  font-size: clamp(40px, 7.4vw, 118px);
+}
+.case__title.-fit2 {
+  font-size: clamp(30px, 5.6vw, 92px);
+}
+.case__title .line {
+  display: block;
+  overflow: hidden;
+}
+.case__title .line > span {
+  display: inline-block;
+}
+.case__idx {
+  position: absolute;
+  z-index: 2;
+  top: 104px;
+  right: var(--pad);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-size: clamp(40px, 7vw, 110px);
+  color: rgba(216, 216, 212, 0.32);
+}
+.case__meta {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  padding: 24px var(--pad);
+  border-bottom: 1px solid var(--line);
+}
+/* projects that carry sector pills get one more column, next to the year. The
+   year column is sized to its content (`auto`) so the pills sit one grid gap
+   away from "2025" instead of at the far edge of a wide column. */
+.case__meta.-tags {
+  grid-template-columns: 1fr 1fr 1fr auto 1fr;
+}
+.case__metatags {
+  /* two chips per row, two rows; every chip fits its own word */
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  justify-items: start;
+  gap: 6px;
+  align-content: flex-end;
+  /* the year and the chips want more air than the grid's 18px (18 + 22 = 40) */
+  margin-left: 22px;
+}
+.case__tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  border: 2px solid var(--orange);
+  /* the accent (#7D33FF) at 20%, as rgba so it renders everywhere */
+  background: rgba(125, 51, 255, 0.2);
+  color: var(--orange);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.case__meta div small {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mut);
+  margin-bottom: 6px;
+}
+.case__meta div b {
+  font-weight: 600;
+  font-size: 15px;
+}
+/* Laptop and tablet: the whole sheet stays on ONE line. The gaps tighten and
+   the chips get the width their two pills need (they wrap inside their cell). */
+@media (max-width: 1024px) and (min-width: 900px) {
+  .case__meta.-tags {
+    column-gap: 10px;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto minmax(226px, auto);
+  }
+  .case__metatags {
+    margin-left: 0;
+  }
+}
+/* Smaller tablets: the chips move to their own full-width row, where everything
+   re-flows nicely (this is where squeezing the five columns stops paying off). */
+@media (max-width: 899px) {
+  .case__meta.-tags {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .case__metatags {
+    grid-column: 1 / -1;
+    margin-left: 0;
+  }
+}
+@media (max-width: 760px) {
+  .case__meta,
+  .case__meta.-tags {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+/* ---- premios (Luna Care) ----
+   Dos píldoras, una debajo de la otra, justo debajo del texto del brief. Misma
+   estética de chip que el resto del sitio (borde, texto en versalitas con tracking),
+   un poco más grandes que las etiquetas y en dorado y plateado para que los dos
+   premios se destaquen. El trofeo (SVG inline) va siempre a la izquierda del texto
+   y hereda el color del chip con currentColor. */
+.awds {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: clamp(18px, 2.8vh, 32px);
+}
+.awd {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 10px 21px 10px 16px;
+  font-size: clamp(10.5px, 0.86vw, 12px);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.15;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition:
+    background 0.35s var(--ease-soft),
+    box-shadow 0.35s var(--ease-soft),
+    transform 0.35s var(--ease-soft);
+}
+.awd__ico {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+}
+.awd.-gold {
+  color: var(--gold);
+  border-color: rgba(233, 185, 73, 0.62);
+  background: linear-gradient(
+    90deg,
+    rgba(233, 185, 73, 0.17),
+    rgba(233, 185, 73, 0.04)
+  );
+}
+.awd.-silver {
+  color: var(--silver);
+  border-color: rgba(210, 215, 222, 0.6);
+  background: linear-gradient(
+    90deg,
+    rgba(210, 215, 222, 0.16),
+    rgba(210, 215, 222, 0.04)
+  );
+}
+/* sólo los de la ficha del caso son links (en la portada van como elementos): el
+   hover los levanta y les enciende el halo del color del premio */
+a.awd:hover {
+  transform: translateY(-2px);
+}
+a.awd.-gold:hover {
+  background: linear-gradient(
+    90deg,
+    rgba(233, 185, 73, 0.34),
+    rgba(233, 185, 73, 0.1)
+  );
+  box-shadow:
+    0 16px 40px -18px rgba(233, 185, 73, 0.95),
+    0 0 0 1px rgba(233, 185, 73, 0.9);
+}
+a.awd.-silver:hover {
+  background: linear-gradient(
+    90deg,
+    rgba(210, 215, 222, 0.3),
+    rgba(210, 215, 222, 0.09)
+  );
+  box-shadow:
+    0 16px 40px -18px rgba(210, 215, 222, 0.9),
+    0 0 0 1px rgba(210, 215, 222, 0.85);
+}
+/* versión acotada para la portada: los mismos chips, apilados, más chicos y con el
+   borde y el fondo más suaves, para que se vea que los premios están ahí sin
+   robarle protagonismo al título del destacado */
+.awds.-mini {
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 0;
+}
+.awds.-mini .awd {
+  /* más aire entre el trofeo y el texto que en la ficha del caso */
+  gap: 11px;
+  padding: 6px 14px 6px 11px;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+.awds.-mini .awd__ico {
+  width: 12px;
+  height: 12px;
+}
+.awds.-mini .awd.-gold {
+  border-color: rgba(233, 185, 73, 0.4);
+  background: linear-gradient(
+    90deg,
+    rgba(233, 185, 73, 0.1),
+    rgba(233, 185, 73, 0.02)
+  );
+}
+.awds.-mini .awd.-silver {
+  border-color: rgba(210, 215, 222, 0.36);
+  background: linear-gradient(
+    90deg,
+    rgba(210, 215, 222, 0.09),
+    rgba(210, 215, 222, 0.02)
+  );
+}
+.case__intro {
+  padding: clamp(56px, 9vh, 110px) var(--pad);
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(24px, 4vw, 80px);
+}
+.case__intro .lbl {
+  color: var(--orange);
+}
+.case__intro p {
+  font-size: clamp(20px, 2.3vw, 32px);
+  line-height: 1.32;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+/* la columna derecha del intro (el texto + los chips de premios). Va en un div
+   propio para que los chips queden en esa columna y no salten a la de la etiqueta */
+.case__intro__body {
+  min-width: 0;
+}
+@media (max-width: 760px) {
+  .case__intro {
+    grid-template-columns: 1fr;
+  }
+  /* en pantalla chica el chip plateado no entra en una sola línea: se deja envolver
+     y la píldora se achica un poco */
+  .awd {
+    gap: 9px;
+    padding: 9px 16px 9px 13px;
+  }
+  .awd__ico {
+    width: 15px;
+    height: 15px;
+  }
+}
+.case__img {
+  overflow: hidden;
+  position: relative;
+  /* placa sutil detrás de la foto: mientras carga no se ve un hueco vacío, se ve
+     el marco del sitio (las fotos del caso son opacas, así que no tapa nada) */
+  background: var(--black-2);
+}
+.case__img.full {
+  margin: 0 var(--pad);
+  aspect-ratio: 16/9;
+}
+.case__img img {
+  transform: scale(1.15);
+  will-change: transform;
+}
+.case__duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(14px, 2vw, 28px);
+  margin: clamp(14px, 2vw, 28px) var(--pad);
+}
+.case__duo .case__img {
+  aspect-ratio: 4/5;
+}
+/* Variante del par para capturas ALTAS (Shiro AI): en vez de forzarlas al marco
+   4:5 —que las recortaba— cada imagen se muestra ENTERA, con su proporción real.
+   Como acá no sobra lienzo, tampoco lleva el zoom del parallax: no se recorta
+   nada. Se activa con `duoNoCrop: true` en el proyecto. */
+.case__duo.-nocrop {
+  /* como las dos capturas pueden tener alturas distintas, cada figura se queda
+     con la suya (alineadas arriba) en vez de estirarse a la más alta */
+  align-items: start;
+}
+.case__duo.-nocrop .case__img {
+  aspect-ratio: auto;
+}
+.case__duo.-nocrop .case__img img {
+  height: auto;
+  object-fit: contain;
+  transform: none;
+}
+/* Dos capturas apiladas debajo de un bloque (Luna Care, "The outcome"): ocupa
+   el MISMO ancho que ocupaba la imagen única a la que reemplazan (full-bleed,
+   con los márgenes del caso) y deja 10px de aire entre una y la siguiente. Cada
+   captura mantiene su proporción, así que no se recorta ninguna. */
+.case__stack {
+  display: grid;
+  gap: 10px;
+  margin: 0 var(--pad);
+}
+.case__stack img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* Los dos apps de Luna: dos piezas de 200x200, el par centrado en la página y
+   80px de distancia entre una y otra. La imagen no lleva fondo ni marco: los
+   íconos vienen en webp con transparencia, así que se ve el fondo de la página
+   y nunca un recuadro blanco. Si no entran las dos (pantallas chicas) se apilan
+   centradas, con la misma separación. */
+.case__apps {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 80px;
+  margin: clamp(14px, 2vw, 28px) var(--pad);
+}
+.case__app {
+  flex: 0 0 auto;
+  width: 200px;
+}
+.case__app a {
+  /* el link es exactamente el cuadro de la imagen: no agrega líneas ni espacio */
+  display: block;
+  width: 200px;
+  height: 200px;
+}
+.case__app img {
+  display: block;
+  /* 200x200 exactos: ancho y alto explícitos. No alcanza con `aspect-ratio`
+     porque el archivo trae un ratio interno distinto de 1:1 (pixel-aspect) y en
+     elementos reemplazados como <img> ese ratio intrínseco gana: así el alto
+     quedaba en 262px en vez de 200px. Con altura fija el cuadro es exacto y
+     `object-fit: contain` centra el ícono sin deformarlo ni recortarlo. */
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+}
+.case__app figcaption {
+  margin-top: 14px;
+  /* el cuerpo del sitio (16px) en bold, centrado con su imagen */
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+}
+/* Links dentro del texto de un caso (hoy: las dos frases de Luna que llevan al
+   App Store). El sitio quita el subrayado a todos los <a>, así que acá se
+   subrayan a propósito, para que se entienda que son clickeables. El trazo se
+   separa un poco del texto para que no ensucie la lectura. */
+.case__block p a {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+/* temporary box where a case study still has to receive its image: it keeps the
+   exact frame the picture will take, so nothing moves when it arrives */
+.case__img.-ph {
+  background: var(--black-2);
+  border: 1px dashed var(--line);
+  display: grid;
+  place-items: center;
+}
+.case__img.-ph span {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mut-l);
+}
+@media (max-width: 640px) {
+  .case__duo {
+    grid-template-columns: 1fr;
+  }
+}
+.case__block {
+  padding: clamp(56px, 9vh, 110px) var(--pad);
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(24px, 4vw, 80px);
+}
+.case__block h3 {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  font-size: clamp(24px, 3.2vw, 44px);
+}
+.case__block p {
+  color: var(--mut);
+  max-width: 56ch;
+  margin-bottom: 1em;
+  /* the case copy keeps its paragraph breaks (the text carries \n\n), the same
+     way the gallery body does — single-paragraph texts look exactly as before */
+  white-space: pre-line;
+}
+/* the highlight used inside the case copy: the same one the gallery body uses
+   (a lighter grey + semibold) so it reads as emphasis, not as plain bold */
+.case__block p b,
+.case__block p strong {
+  color: var(--grey);
+  font-weight: 600;
+}
+@media (max-width: 760px) {
+  .case__block {
+    grid-template-columns: 1fr;
+  }
+}
+.case__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  padding: 0 var(--pad) clamp(56px, 9vh, 110px);
+}
+.case__stats div {
+  border-top: 2px solid var(--orange);
+  padding-top: 12px;
+}
+.case__stats b {
+  display: block;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-size: clamp(34px, 4.6vw, 70px);
+  line-height: 1;
+  color: var(--orange);
+}
+.case__stats small {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+@media (max-width: 640px) {
+  .case__stats {
+    grid-template-columns: 1fr;
+  }
+}
+.case__next {
+  display: block;
+  padding: clamp(64px, 11vh, 130px) var(--pad);
+  text-align: center;
+}
+.case__next small {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mut-l);
+}
+.case__next .nxt {
+  display: block;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  font-size: clamp(48px, 9.5vw, 150px);
+  margin-top: 12px;
+  transition: color 0.3s;
+}
+.case__next:hover .nxt {
+  color: var(--orange);
+}
+.case__back {
+  position: fixed;
+  left: var(--pad);
+  bottom: 24px;
+  z-index: 85;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: var(--black);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 12px 18px;
+  display: none;
+  transition:
+    border-color 0.3s,
+    color 0.3s,
+    opacity 0.35s var(--ease),
+    transform 0.45s var(--ease-soft);
+}
+.case__back:hover {
+  color: var(--orange);
+  border-color: var(--orange);
+}
+body.-case .case__back {
+  display: block;
+}
+/* never covers content: fades out while it would sit on the meta row */
+.case__back.-clear {
+  opacity: 0;
+  pointer-events: none;
+}
+/* out of the way while a gallery piece is open, and back in place on return */
+.case__back.-gone {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px) scale(0.96);
+}
+
+/* optional case parts: moments, rounds, product link */
+.case__moments {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(14px, 2vw, 28px);
+  align-items: start;
+  margin: clamp(14px, 2vw, 28px) var(--pad) clamp(56px, 9vh, 110px);
+}
+.case__film video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* the video under "the move" (Zeigo EAC): it starts on its own and loops, with
+   the native controls — pause, scrub, volume, fullscreen. Unlike the pictures
+   nothing is cropped: the whole frame stays visible, it only letterboxes on
+   black, and it never grows taller than the viewport (or 900px). The player's
+   own background is pure black (#000000), a touch deeper than the page's
+   #0c0c0c, so the frame reads as a cinema screen sitting on it. */
+.case__vid {
+  margin: 0 var(--pad);
+}
+.case__vid video {
+  display: block;
+  width: 100%;
+  max-height: min(78vh, 900px);
+  margin-inline: auto;
+  background: #000000;
+}
+.case__moments .case__img {
+  background: var(--black-2);
+}
+.case__moments video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.case__moments figcaption,
+.case__strip figcaption {
+  margin-top: 14px;
+  color: var(--mut);
+  line-height: 1.5;
+}
+/* the mascot on two quiet stages */
+.case__stage {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(14px, 2vw, 28px);
+  padding: 0 var(--pad) clamp(56px, 9vh, 110px);
+}
+.case__stage .stage {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--black-2);
+}
+.case__stage .stage img {
+  width: 56%;
+  height: auto;
+}
+.case__stage figcaption {
+  margin-top: 14px;
+  color: var(--mut);
+  line-height: 1.5;
+}
+@media (max-width: 640px) {
+  .case__stage {
+    grid-template-columns: 1fr;
+  }
+}
+.case__rounds .case__block {
+  padding-bottom: clamp(28px, 5vh, 56px);
+}
+.case__strip {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(14px, 2vw, 28px);
+  align-items: start;
+  padding: 0 var(--pad) clamp(56px, 9vh, 110px);
+}
+.case__strip img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16/10;
+  object-fit: cover;
+  background: var(--black-2);
+}
+@media (max-width: 760px) {
+  .case__moments {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .case__strip {
+    grid-template-columns: 1fr;
+  }
+}
+.case__linkwrap {
+  padding: clamp(40px, 7vh, 90px) var(--pad) clamp(56px, 9vh, 110px);
+  border-top: 1px solid var(--line);
+}
+.case__link .roll {
+  font-size: clamp(44px, 10vw, 170px);
+}
+.case__link .lbl {
+  display: block;
+  margin-top: 18px;
+}
+/* the header reads black over the light grey sections */
+.ed__ttl {
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-size: clamp(40px, 4.6vw, 72px);
+}
+.ed__h2 {
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-size: clamp(22px, 2vw, 28px);
+  margin-top: 14px;
+}
+.ed__n {
+  font-size: 0.5em;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--mut-l);
+  vertical-align: 0.7em;
+  margin-left: 0.3em;
+}
+.ei {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 40px;
+  align-items: end;
+  padding-top: clamp(150px, 24vh, 230px);
+  padding-bottom: clamp(36px, 6vh, 60px);
+  border-bottom: 1px solid var(--line);
+}
+.ei .lbl {
+  display: block;
+  margin-bottom: 22px;
+  color: var(--grey);
+}
+/* latest: a contained stack */
+.lt {
+  position: relative;
+  padding-top: clamp(40px, 7vh, 80px);
+}
+.ar .lbl:not(.-plain) {
+  color: var(--black);
+}
+.jsoon2 {
+  padding-top: clamp(50px, 9vh, 100px);
+  padding-bottom: clamp(80px, 14vh, 160px);
+}
+.jsoon2 p {
+  margin-top: 14px;
+  color: var(--mut);
+  max-width: 44ch;
+}
+.jsoon2 a {
+  color: var(--grey);
+  border-bottom: 1px solid var(--orange);
+}
+/* list -> post: the cover opens to the screen while the page steps back */
+.shx {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  pointer-events: none;
+  overflow: hidden;
+  background: transparent;
+}
+.shx img {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+}
+.shx::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(12, 12, 12, 0.3), rgba(12, 12, 12, 0) 30%, rgba(12, 12, 12, 0) 55%, rgba(12, 12, 12, 0.55));
+  opacity: 0;
+  transition: opacity 0.6s 0.3s;
+}
+.shx.-on::after {
+  opacity: 1;
+}
+@media (max-width: 900px) {
+  .ei {
+    grid-template-columns: 1fr;
+    gap: 26px;
+  }
+}
+.ph {
+  position: relative;
+  /* 100vh is the fallback; the svh override lives in the @supports block below
+     so the declaration isn't written twice in the same rule */
+  height: 100vh;
+  min-height: 560px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  background: var(--black-2);
+}
+@supports (height: 100svh) {
+  .ph {
+    height: 100svh;
+  }
+}
+.ph::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(12, 12, 12, 0.3), rgba(12, 12, 12, 0) 30%, rgba(12, 12, 12, 0) 55%, rgba(12, 12, 12, 0.55));
+}
+.ph .blinds {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+.ph .blinds i {
+  flex: 1;
+  background: var(--black);
+  margin-bottom: -1px;
+}
+.jscroll {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--grey);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.jscroll .sq {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--orange);
+  animation: blink 1.6s steps(2) infinite;
+}
+/* one calm line of context before a post starts */
+.pctx {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr) auto;
+  gap: clamp(14px, 3vw, 40px);
+  align-items: baseline;
+  margin: clamp(40px, 7vh, 80px) var(--pad) 0;
+  padding: 20px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.pctx .lbl::before {
+  content: "";
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-right: 10px;
+  vertical-align: -0.45em;
+}
+.pctx p {
+  margin: 0;
+  color: var(--grey);
+  line-height: 1.45;
+  font-size: clamp(15px, 1.3vw, 18px);
+  font-weight: 500;
+}
+.pctx__go {
+  display: flex;
+  gap: 22px;
+  white-space: nowrap;
+}
+.pctx__go a {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--grey);
+  transition: color 0.3s;
+}
+.pctx__go a:hover {
+  color: var(--orange);
+}
+.pctx__go b {
+  color: var(--orange);
+  margin-left: 4px;
+}
+@media (max-width: 900px) {
+  .pctx {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ph .blinds {
+    display: none;
+  }
+}
+
+.case__title em {
+  font-style: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .pxt {
+    display: none;
+  }
+  .mani p .w,
+  .about__right p .w {
+    opacity: 1;
+  }
+  body,
+  a,
+  button {
+    cursor: auto !important;
+  }
+  .cursor {
+    display: none;
+  }
+}
+
+/* ---------- barrel gallery (Beyond Web Design... case study) ----------
+   A scroll-driven 3D carousel plus a fullscreen detail view. The drum turns as
+   the page scrolls (and can be dragged); it never moves on its own. The card
+   size, the drum radius and the perspective are all computed in JS as fractions
+   of the barrel width, so the whole thing scales together and the box is
+   measured to fit the drum exactly — nothing is ever clipped. The values below
+   are only the fallback used before JS measures.
+
+   Note on the geometry: the drum's on-screen width is 2×radius + card, so with
+   a fixed number of pieces you cannot have small pieces, tight spacing AND a
+   full-width drum at the same time. Tightening the ring is what narrows it. */
+.barrel {
+  /* Tunables: the drum radius and the card width are fractions of the barrel
+     width, so the whole thing scales and always spans the full screen. */
+  --drum: 0.4; /* drum radius  = 0.40 × width */
+  --card: 0.15; /* card width   = 0.15 × width */
+  --card-w: clamp(100px, 15vw, 215px); /* fallback before JS measures */
+  --card-h: calc(var(--card-w) * 1.4);
+  position: relative;
+  height: 520px; /* refined by JS so the drum is never clipped */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 2000px; /* refined by JS: 3.4 × drum radius */
+  /* dead centre: the tilt alone supplies the "seen from above" angle, so the
+     vanishing point adds no extra vertical skew (that skew was what made the
+     pieces behind tower above the front one) */
+  perspective-origin: 50% 50%;
+  cursor: none;
+  touch-action: pan-y;
+}
+.barrel__stage {
+  position: relative;
+  z-index: 1;
+  width: var(--card-w);
+  height: var(--card-h);
+  transform-style: preserve-3d;
+  /* NEGATIVE rotateX = seen from above. A positive angle lifts the front of the
+     ring and drops the back, which reads as looking up at it from underneath. */
+  transform: rotateX(-5deg) rotateY(0deg);
+  cursor: none;
+}
+.barrel__card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: visible;
+  user-select: none;
+  -webkit-user-select: none;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--black-2);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7);
+  /* --face is written every frame: pieces turning away fade back */
+  opacity: var(--face, 1);
+  will-change: opacity;
+}
+.barrel__card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* fullscreen detail view — z-index 290 keeps it under the custom cursor (300).
+   NOTE: it lives inside `main` (z-index 1), so the fixed "← All work" button in
+   the root stacking context paints on top of it — JS hides that button while a
+   piece is open. */
+.barrel-detail {
+  position: fixed;
+  inset: 0;
+  z-index: 290;
+  display: flex;
+  align-items: center;
+  align-items: safe center;
+  justify-content: center;
+  justify-content: safe center;
+  gap: clamp(1.5rem, 4vw, 4rem);
+  padding: var(--pad);
+  /* scrolls only when the content does not fit — which is the phone case. The
+     `data-lenis-prevent` attribute in the markup is what lets Lenis hand the
+     wheel/touch events over instead of swallowing them (see morphCard). */
+  overflow-y: auto;
+  /* never sideways: the panel is a vertical reading surface only */
+  overflow-x: hidden;
+  /* the panel scrolls when the content does not fit (phones), but the bar
+     itself stays hidden — it is not part of the design */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  background: var(--black);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s var(--ease);
+}
+.barrel-detail.-on {
+  opacity: 1;
+  pointer-events: auto;
+}
+/* WebKit/Blink need this one to hide the bar too */
+.barrel-detail::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+/* the shot plus its dots: the dots live OUTSIDE the card, on the page
+   background, so they never steal height from the image */
+.barrel-detail__figure {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+  /* one source of truth for the piece width, so the landscape and circular
+     variants can derive their own height from the same number */
+  --card-w: clamp(220px, min(44vh, 34vw), 900px);
+}
+.barrel-detail__card {
+  position: relative;
+  flex: none;
+  /* Scales with the window HEIGHT as well as the width, so the piece stays the
+     hero of the screen instead of shrinking into a stamp on a 4K display. The
+     vh term also guarantees it always fits vertically. */
+  width: var(--card-w);
+  aspect-ratio: 3 / 4;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+  /* The travel out of / back into the clicked piece is a Web Animation written
+     by JS (see morphCard) — CSS transitions can't interpolate a value that
+     depends on var(). With WAAPI missing the card simply appears/disappears;
+     `Element.animate` has been available since 2016, well below this site's
+     baseline (it already needs AbortController). */
+  opacity: 0;
+}
+.barrel-detail.-on .barrel-detail__card {
+  opacity: 1;
+}
+/* the two shots are stacked and crossfade */
+.barrel-detail__shots {
+  position: absolute;
+  inset: 0;
+}
+.barrel-detail__shots img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.7s var(--ease);
+}
+.barrel-detail__shots img.-on {
+  opacity: 1;
+}
+.barrel-detail__dots {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  /* no plate of its own: the page background shows through */
+  background: none;
+}
+/* 28px hit area with a 9px visual dot, so it is usable with a thumb */
+.barrel-detail__dot {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: none;
+}
+.barrel-detail__dot::after {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--mut);
+  opacity: 0.45;
+  transition:
+    opacity 0.3s var(--ease),
+    transform 0.3s var(--ease),
+    background-color 0.3s var(--ease);
+}
+/* selected = the lightest colour in the palette, not the accent */
+.barrel-detail__dot.-on::after {
+  opacity: 1;
+  background: var(--grey);
+  transform: scale(1.25);
+}
+/* the copy lands just after the image has settled, one line at a time */
+.barrel-detail__info > * {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.28s var(--ease) 0.1s,
+    transform 0.4s var(--ease) 0.1s;
+}
+.barrel-detail.-on .barrel-detail__info > * {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.5s var(--ease),
+    transform 0.7s var(--ease-soft);
+}
+.barrel-detail.-on .barrel-detail__info > *:nth-child(1) {
+  transition-delay: 0.18s, 0.18s;
+}
+.barrel-detail.-on .barrel-detail__info > *:nth-child(2) {
+  transition-delay: 0.24s, 0.24s;
+}
+.barrel-detail.-on .barrel-detail__info > *:nth-child(3) {
+  transition-delay: 0.3s, 0.3s;
+}
+.barrel-detail.-on .barrel-detail__info > *:nth-child(4) {
+  transition-delay: 0.36s, 0.36s;
+}
+.barrel-detail__info {
+  /* same reasoning as the card: grow with the screen, and never wider than the
+     viewport allows. min-width:0 lets the flex item actually shrink, otherwise
+     a long word pushes the panel wider than the screen and the copy gets cut. */
+  max-width: clamp(320px, min(46vh, 30vw), 620px);
+  min-width: 0;
+  color: var(--grey);
+}
+.barrel-detail__code {
+  color: var(--orange);
+  font-size: clamp(11px, min(1.22vh, 0.76vw), 18px);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.barrel-detail__info h2 {
+  margin: 0.6rem 0 1.5rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-size: clamp(28px, min(5.2vh, 3.4vw), 92px);
+  /* long titles wrap instead of running off the edge */
+  overflow-wrap: anywhere;
+}
+/* the detail body copy — the site's body typography, left aligned, and
+   `pre-line` so the eight lines in the data keep their breaks */
+.barrel-detail__body {
+  margin: 0 0 2rem;
+  font-size: clamp(15px, min(1.7vh, 1.05vw), 21px);
+  line-height: 1.5;
+  color: var(--mut);
+  text-align: left;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+/* highlights inside the body copy */
+.barrel-detail__body b,
+.barrel-detail__body strong {
+  color: var(--grey);
+  font-weight: 600;
+}
+.barrel-detail__body i,
+.barrel-detail__body em {
+  font-style: italic;
+}
+/* circular canvas (Derby): a real circle in the gallery and in the detail.
+   The drum gives every card height = width × 1.4, so the round ones have to
+   opt out of that and stay square, otherwise border-radius:50% draws an oval. */
+.barrel-detail__card.-circle {
+  border-radius: 50%;
+  /* same height as the upright pieces: a circle is 1:1, so it grows wider */
+  height: calc(var(--card-w) * 4 / 3);
+  width: auto;
+  aspect-ratio: 1;
+  box-shadow: none;
+}
+.barrel__card.-circle {
+  border-radius: 50%;
+  height: auto;
+  aspect-ratio: 1;
+  top: 50%;
+  translate: 0 -50%;
+  background: none;
+  box-shadow: none;
+}
+/* landscape canvases (Rodeo, L.A.) in the DRUM: every card keeps the drum's
+   uniform box, so nothing overlaps its neighbours — the shot is fitted inside
+   with `contain` and never cropped. No plate behind it: the letterboxed shot
+   would otherwise sit on a grey rectangle that reads as a stray background. */
+.barrel__card.-rect {
+  background: none;
+  box-shadow: none;
+}
+.barrel__card.-rect img {
+  object-fit: contain;
+  /* the shot is letterboxed inside the card, so it never reaches the card's
+     corners — it needs its own radius to match the other pieces */
+  border-radius: 8px;
+}
+.barrel-detail__card.-circle .barrel-detail__shots img,
+.barrel__card.-circle img {
+  object-fit: contain;
+}
+/* rectangular canvas (Rodeo, L.A.) in the DETAIL: the SAME height as the
+   upright pieces — only the width changes, following the real canvas ratio
+   (written by JS from the first shot). A portrait shot inside a landscape piece
+   letterboxes, so the frame never resizes. */
+.barrel-detail__card.-rect {
+  height: calc(var(--card-w) * 4 / 3);
+  width: auto;
+  aspect-ratio: 4 / 3;
+}
+.barrel-detail__card.-rect .barrel-detail__shots,
+.barrel-detail__card.-rect .barrel-detail__shots img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.barrel-detail__nav {
+  position: fixed;
+  right: var(--pad);
+  bottom: var(--pad);
+  z-index: 2;
+  display: flex;
+  gap: 0.5rem;
+}
+.barrel-detail__arrow {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--black);
+  color: var(--grey);
+  font-family: inherit;
+  font-size: 17px;
+  line-height: 1;
+  cursor: none;
+  transition:
+    color 0.25s var(--ease),
+    border-color 0.25s var(--ease);
+}
+.barrel-detail__arrow:hover {
+  color: var(--orange);
+  border-color: var(--orange);
+}
+.barrel-detail__close {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: clamp(11px, min(1.22vh, 0.76vw), 18px);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--grey);
+  cursor: none;
+  opacity: 0.7;
+  transition: opacity 0.2s, color 0.2s;
+}
+.barrel-detail__close:hover {
+  opacity: 1;
+  color: var(--orange);
+}
+/* The invisible twins that make the browser's own "Open image in a new tab" (and
+   "Save image as", and "Copy image") hand over a watermarked copy: the artwork
+   you SEE stays the clean file, and a copy with the mark is stacked exactly over
+   it with opacity 0 — invisible, but still hit-tested, so it is the one the
+   right-click finds. JS builds them (see markShot / the drum cards) and writes
+   the watermarked src; without a `profile.watermark` in content.js they simply
+   stay empty and the browser hands over the untouched file. */
+.barrel__card .barrel__card-wm {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* the drum's own image is not a hit target (the card handles the drag), the
+     twin has to be, or the right-click would never reach an image */
+  pointer-events: auto;
+  opacity: 0;
+}
+/* in the panel the shot rules already place the twin over the shot and keep it at
+   opacity 0 (only `.-on` fades in) — it just has to be a hit target */
+.barrel-detail__wm {
+  pointer-events: auto;
+}
+
+/* Tablet and touch: from here down the gallery is a touch surface, so it needs
+   real room — bigger pieces, a taller stage and a wider tap target. The pointer
+   query catches touch tablets and laptops wider than the width breakpoint. */
+@media (max-width: 1024px), (pointer: coarse) {
+  .barrel {
+    /* fallback only — JS measures and writes the real values */
+    --card-w: clamp(110px, 26vw, 230px);
+    height: 440px;
+  }
+  /* a drag is a scroll gesture on touch: keep the browser's vertical panning */
+  .barrel__card {
+    cursor: pointer;
+  }
+}
+@media (min-width: 821px) and (max-width: 1024px) {
+  /* Tablet, still a ROW: the piece beside the copy. The figure has to keep its
+     NATURAL width here. Stretching it to 100% left the copy with no room at all
+     (it collapsed to 0px wide), and — because the landscape and round canvases
+     then took their height from that full column width — it pushed the dots
+     below the fold. A dot you cannot reach is
+     a dot you cannot press, and the click aimed at it landed on the backdrop,
+     which closes the panel: exactly the "pressing a dot throws me back to the
+     gallery" feeling. So: same height as the upright pieces, width from the
+     canvas ratio, and never wider than the row can spare for the copy. */
+  .barrel-detail__card.-rect {
+    width: auto;
+    height: calc(var(--card-w) * 4 / 3);
+    max-width: 58vw;
+  }
+  .barrel-detail__card.-circle {
+    /* a circle is square, so its height has to carry the cap — a non-square box
+       would make border-radius:50% draw an oval */
+    width: auto;
+    height: min(calc(var(--card-w) * 4 / 3), 58vw);
+  }
+}
+@media (max-width: 820px) {
+  .barrel {
+    --card-w: clamp(100px, 30vw, 200px);
+    height: 380px;
+  }
+  .barrel-detail {
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 1.25rem;
+    /* The header (logo + hamburger) is fixed at ~76px and paints ABOVE this
+       panel, so the photo needs to start below it or it collides with both.
+       6rem clears it with a little air; the safe-area term covers notches. */
+    padding: calc(6rem + env(safe-area-inset-top, 0px)) var(--pad) var(--pad);
+  }
+  .barrel-detail__figure {
+    /* the mobile piece width: the upright, landscape and circular variants all
+       read it, so they stay the same height */
+    --card-w: min(72vw, 300px, 40vh);
+    /* the panel is a COLUMN here, so the piece can use the full width */
+    width: 100%;
+  }
+  .barrel-detail__card {
+    /* capped by height too, so on a short phone the piece cannot eat the whole
+       panel and push the copy out of reach */
+    width: var(--card-w);
+  }
+  /* Column layout: the landscape and round canvases can take their height from
+     the canvas ratio at full width — but never more than the panel can show, or
+     the dots slide below the fold and the click meant for one lands on the
+     backdrop and closes the panel. */
+  .barrel-detail__card.-rect {
+    width: 100%;
+    height: auto;
+    max-height: 58dvh;
+  }
+  .barrel-detail__card.-circle {
+    /* square: capped in BOTH directions with one number, or border-radius:50%
+       would draw an oval */
+    width: min(100%, 58dvh);
+    height: auto;
+  }
+  .barrel-detail__info {
+    max-width: 100%;
+    width: 100%;
+    /* keeps the "Back to the gallery" button clear of the pinned arrows */
+    padding-bottom: 4.5rem;
+  }
+}
+/* Short viewports (landscape phones): the centred row would ride up under the
+   fixed header, so anchor it to the top with room for the header instead. */
+@media (max-height: 560px) and (min-width: 821px) {
+  .barrel-detail {
+    align-items: flex-start;
+    padding-top: calc(5.5rem + env(safe-area-inset-top, 0px));
+  }
+  .barrel-detail__figure {
+    /* Short window (a phone on its side, or a squat browser window): the piece
+       and the dots have to fit under the fixed header together, so the piece is
+       sized from the little height there is. The 220px floor of the default
+       clamp is what used to push the dots off the bottom here — and an
+       unreachable dot is a dot you cannot press. */
+    --card-w: min(44vh, 34vw);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .barrel-detail,
+  .barrel-detail__card,
+  .barrel-detail__shots img,
+  .barrel-detail__dot::after,
+  .barrel-detail__info > * {
+    transition: none;
+  }
+}
+
+/* ---------- aviso de cookies (Google Analytics) ----------
+   Compacto y abajo a la izquierda. Aparece una sola vez y recién con el primer
+   scroll (lo controla js/boot.js), así no tapa la animación de la home.
+   z-index 190: sobre el contenido y el wipe (150), debajo del loader (200) y del
+   cursor (300). El texto es corto a propósito: el detalle vive en /privacy/. */
+.cookies {
+  position: fixed;
+  left: clamp(10px, 2vw, 28px);
+  bottom: clamp(10px, 2vw, 28px);
+  z-index: 190;
+  width: min(370px, calc(100vw - 20px));
+  max-height: 62vh;
+  overflow-y: auto;
+  background: var(--black-2);
+  border: 1px solid var(--line);
+  padding: 16px 18px 14px;
+}
+.cookies[hidden] {
+  display: none;
+}
+.cookies__ttl {
+  color: var(--orange);
+  margin-bottom: 8px;
+}
+.cookies__txt {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--mut);
+}
+.cookies__txt b {
+  color: var(--grey);
+  font-weight: 600;
+}
+.cookies__txt a {
+  color: var(--grey);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(216, 216, 212, 0.4);
+  transition:
+    color 0.3s,
+    text-decoration-color 0.3s;
+}
+.cookies__txt a:hover {
+  color: var(--orange);
+  text-decoration-color: var(--orange);
+}
+.cookies__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 8px;
+}
+.cookies__acts {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.cookies__btn {
+  flex: 1 1 0;
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+  transition:
+    background 0.3s,
+    color 0.3s,
+    border-color 0.3s;
+}
+.cookies__btn.-ok {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: var(--black);
+}
+.cookies__btn.-ok:hover {
+  background: var(--grey);
+  border-color: var(--grey);
+}
+.cookies__btn.-no:hover {
+  border-color: var(--grey);
+  color: #fff;
+}
+.cookies__x {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--mut);
+  border: 1px solid transparent;
+  border-radius: 50%;
+  transition:
+    color 0.3s,
+    border-color 0.3s;
+}
+.cookies__x:hover {
+  color: var(--grey);
+  border-color: var(--line);
+}
+/* ---------- página de privacidad ----------
+   Es un documento aparte (privacy/index.html) con la piel del sitio: se abre
+   siempre en su propia pestaña, así no corta la navegación del portfolio. */
+.legal__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: clamp(18px, 3vw, 34px) var(--pad);
+  border-bottom: 1px solid var(--line);
+}
+.legal__logo {
+  font-size: clamp(16px, 2vw, 20px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.legal__back {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mut);
+  transition: color 0.3s;
+}
+.legal__back:hover {
+  color: var(--orange);
+}
+.legal {
+  max-width: 78ch;
+  margin: 0 auto;
+  padding: clamp(40px, 7vw, 88px) var(--pad) clamp(50px, 9vw, 110px);
+}
+.legal h1 {
+  font-size: clamp(32px, 6vw, 62px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin: 12px 0 16px;
+}
+.legal__meta {
+  font-size: 13px;
+  color: var(--mut);
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 22px;
+}
+.legal h2 {
+  font-size: clamp(17px, 2.2vw, 22px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--grey);
+  margin: 34px 0 10px;
+}
+.legal p,
+.legal li {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--mut);
+}
+.legal p + p {
+  margin-top: 10px;
+}
+.legal b,
+.legal strong {
+  color: var(--grey);
+  font-weight: 600;
+}
+.legal ul {
+  margin: 10px 0 0 18px;
+  display: grid;
+  gap: 6px;
+}
+.legal a {
+  color: var(--grey);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(216, 216, 212, 0.4);
+  transition:
+    color 0.3s,
+    text-decoration-color 0.3s;
+}
+.legal a:hover {
+  color: var(--orange);
+  text-decoration-color: var(--orange);
+}
+.legal code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12.5px;
+  color: var(--grey);
+  background: rgba(216, 216, 212, 0.08);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+.legal table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 13px;
+}
+.legal th,
+.legal td {
+  text-align: left;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+  color: var(--mut);
+  vertical-align: top;
+}
+.legal th {
+  color: var(--grey);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.legal__note {
+  margin-top: 34px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  background: var(--black-2);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--mut);
+}
+.legal__foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 20px var(--pad) clamp(30px, 5vw, 50px);
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+@media (max-width: 640px) {
+  .cookies {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    width: auto;
+    max-height: 56vh;
+    padding: 14px 16px 12px;
+  }
+  .cookies__btn {
+    padding: 11px 8px;
+  }
+  .legal__head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+/* La página de privacidad es un documento aparte: no lleva el cursor propio del
+   sitio, así que ahí se usa el cursor normal del sistema (antes quedaba invisible
+   porque heredaba el `cursor: none` global). */
+.legal-page,
+.legal-page a,
+.legal-page button {
+  cursor: auto;
+}
+.legal-page a,
+.legal-page button,
+.legal-page [role="button"] {
+  cursor: pointer;
+}
+
