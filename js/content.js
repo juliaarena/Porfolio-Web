@@ -235,9 +235,9 @@ window.SITE = {
       takeaway:
         'Building this from zero taught me to own a product from the first idea to the last pixel. Designing for people I actually know made every decision sharper. And I learned that <b>the best AI doesn’t just show data: it takes action for the user.</b>',
       stats: [
-        ['24/7', 'AI-powered business monitoring'],
-        ['100%', 'Automated sales tracking'],
-        ['3-in-1', 'Sales, inventory & AI recommendations'],
+        ['30%', 'less time spent on daily operations'],
+        ['40%', 'faster sales reporting'],
+        ['25%', 'faster inventory management'],
       ],
     },
     {
