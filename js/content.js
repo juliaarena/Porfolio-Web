@@ -351,9 +351,11 @@ window.SITE = {
       takeaway:
         'Joining a project halfway taught me to respect what’s already built, <b>understand the reasons behind past decisions, and improve it without breaking the experience.</b> Designing two apps for one service also taught me to think in systems: every screen on one side shapes the other.',
       stats: [
-        ['2', 'Mobile apps'],
-        ['2', 'User groups'],
-        ['1', 'Connected ecosystem'],
+        ['85,000+', 'patients'],
+        ['3,000+', 'therapists'],
+        ['1.2M+', 'in-home visits'],
+        ['99.7%', 'patient satisfaction'],
+        ['88', 'NPS'],
       ],
     },
     {
